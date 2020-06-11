@@ -1,0 +1,449 @@
+---
+title: '234'
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Introduction
+* Motivation/Questions
+* Data Preprocessing & View
+* Result: Analysis and Findings
+* Conclusion and Discussion
+
+## Motivation/Questions
+陪伴著我們長大的寶可夢，到現在熱潮依舊不減，  
+越來越多人陷入寶可夢的魅力中，  
+但好像沒有好好深入了解過，所以想透過這次的Project更認識他們  
+寶可夢戰鬥是我們有興趣研究的東西，我們想預測戰鬥勝利的寶可夢  
+所以我們透過機器學習的方法分析  
+
+
+```{r include=FALSE}
+## Data Preprocessing & View
+library(ggplot2)
+library(dplyr)
+library(magrittr)
+library(ggthemes)
+library(highcharter)
+```
+
+
+
+```{r include=FALSE}
+# read file
+pokemon<-read.csv("D:\\pokemon.csv",sep=",",stringsAsFactors=F)
+combats <- read.csv("D:\\combats.csv")
+```
+
+
+```{r include=FALSE}
+head(pokemon)
+```
+
+
+```{r include=FALSE}
+summary(pokemon)
+```
+
+## 分別把18個總族的寶可夢列出來
+```{r}
+
+#subset(pokemon,Type.1=="Bug")
+# subset(pokemon,Type.1=="Dark")
+ subset(pokemon,Type.1=="Dragon")
+# subset(pokemon,Type.1=="Electric")
+# subset(pokemon,Type.1=="Fairy")
+# subset(pokemon,Type.1=="Fighting")
+# subset(pokemon,Type.1=="Fire")
+# subset(pokemon,Type.1=="Flying")
+# subset(pokemon,Type.1=="Ghost")
+# subset(pokemon,Type.1=="Grass")
+# subset(pokemon,Type.1=="Ice")
+# subset(pokemon,Type.1=="Normal")
+# subset(pokemon,Type.1=="Poison")
+# subset(pokemon,Type.1=="Psychic")
+# subset(pokemon,Type.1=="Rock")
+# subset(pokemon,Type.1=="Steel")
+# subset(pokemon,Type.1=="Water")
+```
+
+
+## 寶可夢總族數量
+```{r}
+# Type.1 pokemons
+pokemon %>% group_by(Type.1) %>% summarise(Total_pokemon=n())%>% data.frame()
+```
+
+
+```{r}
+# Type.2 pokemons
+pokemon %>% group_by(Type.2) %>% summarise(Total_pokemon=n())%>% data.frame()
+```
+
+
+```{r}
+# Total number of pokemons by generations
+pokemon %>% group_by(Generation) %>% summarise(Total_pokemon=n())%>% data.frame()
+```
+
+## HP & Speed前十名的寶可夢
+
+```{r}
+# Top 10 pokemon with high hp
+pokemon %>% group_by(Name,HP)%>% arrange(desc(HP)) %>% ungroup()  %>%
+  select("Name","Type.1","HP")%>%head(10)%>% data.frame()
+```
+
+
+```{r}
+# Top 10 pokemon with high speed
+pokemon %>% group_by(Name,Speed)%>% arrange(desc(Speed)) %>% ungroup()  %>%
+  select("Name","Type.1","Speed")%>%head(10)%>% data.frame()
+```
+
+## 長條圖 &分布  
+
+HP  
+  
+```{r}
+ggplot(pokemon) + 
+  geom_histogram(bins = 30,aes(x=HP,y=..density..), position="identity") + 
+  geom_density(aes(x=HP,y=..density..))
+```
+
+---
+
+Attack
+
+```{r}
+ggplot(pokemon) + 
+  geom_histogram(bins = 30,aes(x=Attack,y=..density..), position="identity") + 
+  geom_density(aes(x=Attack,y=..density..))
+```
+
+---
+
+Defense
+```{r}
+ggplot(pokemon) + 
+  geom_histogram(bins = 30,aes(x=Defense,y=..density..), position="identity") + 
+  geom_density(aes(x=Defense,y=..density..))
+```
+
+---
+
+Sp Atk
+```{r}
+ggplot(pokemon) + 
+  geom_histogram(bins = 30,aes(x=Sp..Atk,y=..density..), position="identity") + 
+  geom_density(aes(x=Sp..Atk,y=..density..))
+```
+
+---
+
+
+SpDef
+```{r}
+ggplot(pokemon) + 
+  geom_histogram(bins = 30,aes(x=Sp..Def,y=..density..), position="identity") + 
+  geom_density(aes(x=Sp..Def,y=..density..))
+```
+
+
+---
+
+
+Speed
+```{r}
+ggplot(pokemon) + 
+  geom_histogram(bins = 30,aes(x=Speed,y=..density..), position="identity") + 
+  geom_density(aes(x=Speed,y=..density..))
+```
+
+
+```{r}
+# hist(pokemon$HP,col = "red",freq = F,xlab = "HP",main = "HP")
+# hist(pokemon$Attack,col = "gray",freq = F,xlab = "Attack",main = "Attack")
+# hist(pokemon$Defence,col = "blue",freq = F,xlab = "Defence",main = "Defence")
+# hist(pokemon$Sp.Atk,col = "green",freq = F,xlab = "Sp.Atk",main = "Sp.Atk")
+# hist(pokemon$Sp.Def,col = "purple",freq = F,xlab = "Sp.Def",main = "Sp.Def")
+# hist(pokemon$Speed,col = "yellow",freq = F,xlab = "Speed",main = "Speed")
+```
+
+## Pair
+```{r}
+
+n <- setdiff(names(pokemon), c("Name", "X.", "Type.1", "Type.2", "Legendary", "Generation"))
+temp <- pokemon[n]
+pairs(temp)
+```
+
+## 放大看Attack vs Defense 的關係
+
+```{r}
+# 
+# special attack vs special defense
+# Hp vs speed
+## true if single type
+singleType.flag <- pokemon$Type.2 == ""
+
+## plot attack vs defense
+ggplot(pokemon, aes(x = Attack, y = Defense, color = singleType.flag)) + 
+  geom_point(alpha = 0.5) + 
+  scale_color_discrete(name = "Type", breaks = c("FALSE","TRUE"), 
+                       labels = c("Dual", "Single"))
+```
+
+---
+
+```{r}
+# plot special attack vs special defense
+ggplot(pokemon, aes(x = Sp..Atk, y = Sp..Def, color = singleType.flag)) + 
+  geom_point(alpha = 0.5) + labs(x = "Special Attack", y = "Special Defense") +
+  scale_color_discrete(name = "Type", breaks = c("FALSE","TRUE"), 
+                       labels = c("Dual", "Single"))
+```
+
+---
+
+```{r}
+# plot Hp vs speed
+ggplot(pokemon, aes(x = HP, y = Speed, color = singleType.flag)) + 
+  geom_point(alpha = 0.5) + 
+  scale_color_discrete(name = "Type", breaks = c("FALSE","TRUE"), 
+                       labels = c("Dual", "Single"))
+```
+
+## 寶可夢傳說級&非傳說級分布
+```{r}
+colnames(pokemon)<-c("id","Name","Type.1","Type.2","HP","Attack","Defense","Sp.Atk","Sp.Def","Speed","Generation","Legendary")
+Type.1<-c("Dragon","Steel","Flying","Psychic","Rock" ,"Fire","Electric" ,"Dark","Ghost" ,"Ground","Ice", "Water","Grass","Fighting", "Fairy" ,"Poison","Normal","Bug")
+color<-c("#6F35FC","#B7B7CE","#A98FF3","#F95587","#B6A136","#EE8130","#F7D02C","#705746","#735797","#E2BF65","#96D9D6","#6390F0","#7AC74C","#C22E28","#D685AD","#A33EA1","#A8A77A","#A6B91A")
+COL<-data.frame(Type.1,color)
+
+merge(
+  merge(pokemon %>% dplyr::group_by(Type.1) %>% dplyr::summarize(tot=n()),
+        pokemon %>% dplyr::group_by(Type.1,Legendary) %>% dplyr::summarize(count=n()),by='Type.1'),
+  COL, by='Type.1') %>% 
+  ggplot(aes(x=reorder(Type.1,tot),y=count)) + 
+  geom_bar(aes(fill=color,alpha=Legendary),color='white',size=.25,stat='identity') + 
+  scale_fill_identity() + coord_flip() + theme_fivethirtyeight() + 
+  ggtitle("Pokemon Distribution") + scale_alpha_discrete(range=c(.9,.6))
+```
+
+## MDS
+```{r include=FALSE}
+mds <- dist(pokemon[,5:10]) %>%
+  cmdscale()%>%
+  data.frame()
+xx <- ifelse(pokemon$id %in% c(25,133,143),"like","soso")
+# ggplot(data = mds,mapping = aes(x=X1,y=X2,color=pokemon$Type.1))+
+#  geom_point()
+```
+
+
+```{r}
+hchart(mds,"scatter",hcaes(x=X1,y=X2,group=pokemon$Type.1))
+```
+
+
+```{r}
+hchart(mds,"scatter",hcaes(x=X1,y=X2,group=xx))
+```
+
+
+pokemon戰鬥預測
+```{r}
+## Result: Analysis and Findings
+pokefight <- combats
+
+pokefight$ID_1 <- (combats$First_pokemon)
+pokefight$Type1_1 <- pokemon$Type.1[combats$First_pokemon]
+pokefight$Type2_1 <- pokemon$Type.2[combats$First_pokemon]
+pokefight$HP_1 <- pokemon$HP[combats$First_pokemon]
+pokefight$Attack_1 <- pokemon$Attack[combats$First_pokemon]
+pokefight$Defense_1 <- pokemon$Defense[combats$First_pokemon]
+pokefight$Sp.Atk_1 <- pokemon$Sp.Atk[combats$First_pokemon]
+pokefight$Sp.Def_1 <- pokemon$Sp.Def[combats$First_pokemon]
+pokefight$Speed_1 <- pokemon$Speed[combats$First_pokemon]
+pokefight$Generation_1 <- pokemon$Generation[combats$First_pokemon]
+pokefight$Legendary_1 <- pokemon$Legendary[combats$First_pokemon]
+
+pokefight$ID_2 <- (combats$Second_pokemon)
+pokefight$Type1_2 <- pokemon$Type.1[combats$Second_pokemon]
+pokefight$Type2_2 <- pokemon$Type.2[combats$Second_pokemon]
+pokefight$HP_2 <- pokemon$HP[combats$Second_pokemon]
+pokefight$Attack_2 <- pokemon$Attack[combats$Second_pokemon]
+pokefight$Defense_2 <- pokemon$Defense[combats$Second_pokemon]
+pokefight$Sp.Atk_2 <- pokemon$Sp.Atk[combats$Second_pokemon]
+pokefight$Sp.Def_2 <- pokemon$Sp.Def[combats$Second_pokemon]
+pokefight$Speed_2 <- pokemon$Speed[combats$Second_pokemon]
+pokefight$Generation_2 <- pokemon$Generation[combats$Second_pokemon]
+pokefight$Legendary_2 <- pokemon$Legendary[combats$Second_pokemon]
+pokefight$Result[pokefight$Winner == pokefight$First_pokemon] <- 'Win'
+pokefight$Result[pokefight$Winner == pokefight$Second_pokemon] <- 'Loss'
+
+pokefight$Result <- as.factor(pokefight$Result)
+pokefight$Generation_1 <- as.factor(pokefight$Generation_1)
+pokefight$Generation_2 <- as.factor(pokefight$Generation_2)
+```
+
+
+```{r}
+str(pokefight)
+```
+
+## 傳說級報可夢的速度有沒有比非傳說級的快?
+```{r}
+ggplot(pokefight, aes(Legendary_1, Speed_1,  fill = Legendary_1)) + geom_boxplot(position = 'dodge')
+```
+
+## 速度是怎麼影響寶可夢的戰鬥?
+```{r}
+ggplot(pokefight, aes(Speed_1, fill = Result)) + geom_density(alpha = 0.5)
+
+```
+
+---
+
+我們可以看到大多數勝出的寶可夢比大多數失敗者的寶可夢快。  
+此外，我們可以看到更直觀的功能，即每次戰鬥中口袋妖怪之間的速度差異。  
+  
+速度差異是否可以幫助我們區分贏家和輸家？
+
+---
+
+讓我們首先生成功能：HP，攻擊，防禦，Sp..Atk，Sp..Def的差異，然後查看每個變量與戰鬥結果的相關性  
+
+---
+
+```{r}
+# Create 'difference' features
+pokefight$diff_HP = pokefight$HP_1 - pokefight$HP_2
+pokefight$diff_Attack = pokefight$Attack_1 - pokefight$Attack_2
+pokefight$diff_Defense = pokefight$Defense_1 - pokefight$Defense_2
+pokefight$diff_Sp.Atk = pokefight$Sp.Atk_1 - pokefight$Sp.Atk_2
+pokefight$diff_Sp.Def = pokefight$Sp.Def_1 - pokefight$Sp.Def_2
+pokefight$diff_Speed = pokefight$Speed_1 - pokefight$Speed_2
+```
+
+
+```{r}
+# Create binary variable of Result ('Win/Lose' to numeric variable '1/0')
+pokefight$binaryResult[pokefight$Result == "Win"] <- 1
+pokefight$binaryResult[pokefight$Result == "Loss"] <- 0
+summary(pokefight)
+```
+
+
+```{r}
+# Create dataframe which only consist of numeric features
+numeric_metrics <- pokefight[ ,c('binaryResult', 
+                                 'diff_HP', 'diff_Attack', 'diff_Defense', 
+                                 'diff_Sp.Atk', 'diff_Sp.Def', 'diff_Speed',
+                                 'HP_1', 'Attack_1', 'Defense_1', 'Sp.Atk_1', 'Sp.Def_1', 'Speed_1')]
+# Create correlation matrix which consists of numeric features
+cor_matrix <- cor(numeric_metrics)
+cor_matrix
+```
+
+## See multiple density plot
+```{r}
+# Create long table using 'melt'
+mtxlong <- reshape2::melt(numeric_metrics, id.vars = "binaryResult")
+```
+
+
+```{r}
+# Generate multiple density chart
+ggplot(mtxlong, aes(value, fill = factor(binaryResult))) + #create a canvas 
+  facet_wrap(~variable, scales = 'free', strip.position = 'top') + #create sequence of panels
+  geom_density(alpha = 0.5) + #create density plot 
+  labs(fill = 'binaryResult') #rename the legend
+```
+
+---
+
+首先，在創建模型之前，讓我們準備訓練和測試數據集。  
+我們將從這50000行中分成兩部分。   
+80％用於訓練數據，其餘為測試數據。  
+```{r}
+## Classification Tree
+set.seed(117)
+random <- sample(1:50000, size = 40000)
+train <- pokefight[random, ]
+test <- pokefight[-random, ]
+```
+
+
+```{r}
+# Get the test_label and the test data
+library(caret)
+library(lattice)
+library(rpart)
+library(rpart.plot)
+test_label <- test[,26] # Column 26 is target
+test_data <- test[,-26]
+test_data$Result <- '0'
+binary_tree_1 <- rpart(Result ~   diff_Speed + Speed_1, data = train, method = 'class' )
+# Predict winner using binary tree 1
+```
+
+
+```{r}
+result_1 <- predict(binary_tree_1, test_data, type = 'class')
+table(result_1, test_label)
+rpart.plot(binary_tree_1, type = 5)
+```
+
+
+```{r include=FALSE}
+## Random Forest
+# Create Dataframe which has more than numeric feature
+all_metrics <- pokefight[ ,c('Result',
+                             'diff_HP', 'diff_Attack', 'diff_Defense', 
+                             'diff_Sp.Atk', 'diff_Sp.Def', 'diff_Speed',
+                             'HP_1', 'Attack_1', 'Defense_1', 'Sp.Atk_1',
+                             'Sp.Def_1', 'Speed_1', 'Type1_1', 'Type2_1',
+                             'Generation_1', 'Legendary_1',
+                             'HP_2', 'Attack_2', 'Defense_2', 'Sp.Atk_2',
+                             'Sp.Def_2', 'Speed_2', 'Type1_2', 'Type2_2',
+                             'Generation_2', 'Legendary_2'
+)]
+# Now we have include 26 features + 1 taarget in one dataframe
+```
+
+
+```{r}
+# Create Train and Test Dataset
+library(randomForest)
+set.seed(117)
+random <- sample(1:50000, size = 40000)
+all_metrics$Type1_1 <- as.factor(all_metrics$Type1_1)
+all_metrics$Type2_1 <- as.factor(all_metrics$Type2_1)
+all_metrics$Type1_2 <- as.factor(all_metrics$Type1_2)
+all_metrics$Type2_2 <- as.factor(all_metrics$Type2_2)
+train <- all_metrics[random, ]
+test <- all_metrics[-random, ]
+
+# Get the test_label and the test data
+test_label <- test[,1] # Column 1 is target
+test_data <- test[,-1]
+test_data$Result <- '0'
+rf_tree <- randomForest(Result ~. , data = train, type = 'classification', ntree = 500 )
+rf_tree
+
+#testing confusion matrix
+labels <- predict(rf_tree,test)
+table(test$Result,labels)
+
+```
+
+## Conclusion and Discussion
+1.透過random forest 可以知道預測的準確度很高，很顯著的可以預測出贏的寶可夢和輸的寶可夢  
+2.diff.Sp & 第一隻寶可夢的速度可以區分戰鬥獲勝的寶可夢和戰鬥失敗的寶可夢  
+3.隨機森林模型比只有一個節點的分類樹具有更高的準確性  
